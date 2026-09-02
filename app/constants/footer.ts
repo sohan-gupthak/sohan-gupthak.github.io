@@ -20,10 +20,10 @@ export const FOOTER_LINKS: FooterLink[] = [
     url: '#',
   },
   {
-    name: 'Instagram',
-    hoverText: '@sonu.kukkadapu',
-    icon: 'icons/instagram.svg',
-    url: 'https://www.instagram.com/sonu.kukkadapu/',
+    name: 'Blog',
+    hoverText: 'Read the blog',
+    icon: 'icons/blog.svg',
+    url: '/blog',
   },
   {
     name: 'Resume',

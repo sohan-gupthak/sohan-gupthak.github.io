@@ -12,9 +12,14 @@ const FooterLinkItem = ({ link }: { link: FooterLink }) => {
   const [hovered, setHovered] = useState(false);
   const onPointerOver = () => setHovered(true);
   const onPointerOut = () => setHovered(false);
-  const onClick = () => window.open(link.url, '_blank');
+  const onClick = () => {
+    if (link.url.startsWith("/")) {
+      window.location.href = link.url;
+      return;
+    }
+    window.open(link.url, "_blank");
+  };
   const onPointerMove = (e: MouseEvent) => {
-    if (isMobile) return;
     const hoverDiv = document.getElementById(`footer-link-${link.name}`);
     gsap.to(hoverDiv, {
       top: `${e.clientY + 14}px`,
@@ -22,7 +27,6 @@ const FooterLinkItem = ({ link }: { link: FooterLink }) => {
       duration: 0.6,
     });
   };
-
   const fontProps = {
     font: "./Vercetti-Regular.woff",
     fontSize: 0.2,
