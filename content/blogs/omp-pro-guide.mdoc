@@ -1,0 +1,531 @@
+---
+title: "Oh My Pi (omp): The Only Terminal Agent Guide You'll Ever Need"
+description: "A deep, practical walkthrough of omp's most powerful features — session management, LSP, DAP, Hashline edits, agent roles, subagents, advisor mode, vibe mode, memory, and every slash command worth knowing. No fluff. Just the stuff that actually changes how you work."
+date: "2026-09-03"
+tags: ["omp", "terminal", "ai-agent", "developer-tools", "productivity"]
+author: "Sohan Guptha"
+readTime: "16 min read"
+---
+
+Let me be honest with you.
+
+When I first started using **omp (oh-my-pi)**, I used it the same way most people use AI coding tools — type a prompt, get some code, copy-paste, repeat. Standard stuff. Nothing special.
+
+Then one day I stumbled across the docs for session trees, the advisor role, and vibe mode. I spent the next three hours with my jaw somewhere around my desk. This wasn't just another AI wrapper. This was something fundamentally different.
+
+This blog is everything I wish someone had written for me before I spent weeks figuring it out. If you're already using omp and think you know it well — I'd bet good money there's something in here that'll make you stop and think *"wait, that's a thing?"*
+
+---
+
+## Quick install (and then we move on)
+
+I'm not going to spend much time here. If you're reading this, you can handle three commands:
+
+```bash
+# macOS / Linux
+curl -fsSL https://omp.sh/install | sh
+
+# Homebrew
+brew install can1357/tap/omp
+
+# Windows (PowerShell)
+irm https://omp.sh/install.ps1 | iex
+```
+
+Done. Now the actual stuff.
+
+---
+
+## Session Management — The Feature Nobody Talks About Enough
+
+Here's a question: how often do you close your terminal and lose all context about what you were doing? Every single time, right? You come back the next morning, fire up the agent again, and spend 10 minutes re-explaining the project to it.
+
+omp kills this problem dead.
+
+### Starting, resuming, and forking sessions
+
+```bash
+# Start a new named session
+omp --session my-auth-refactor
+
+# Resume exactly where you left off
+omp --resume my-auth-refactor
+
+# List all your sessions
+omp sessions list
+
+# Fork a session (branch off without losing the original)
+omp sessions fork my-auth-refactor --name auth-v2-attempt
+```
+
+That last one — forking — is something I use constantly. When you're mid-session and want to try a completely different approach without nuking your current context, you fork it. One session becomes two. You can experiment freely on the fork and come back to the original if things go sideways.
+
+### Session trees
+
+Your sessions don't have to be linear. They form trees. When you're in a session and spawn a subagent, it creates a child node. You can view the whole structure:
+
+```bash
+# See the session tree
+omp sessions tree
+
+# Attach to any child session by ID
+omp a <session-id>
+```
+
+This is huge when you're running parallel workstreams. You can jump between parent and child sessions, watch them in real time, and steer them independently.
+
+### Resetting a wedged session without losing context
+
+Sometimes the provider stream gets into a bad state. Most people would close everything and start over, losing all context. Instead:
+
+```bash
+/fresh
+```
+
+That's it. `/fresh` resets the provider stream state — clears stale prompt caches, unsticks wedged streams — without touching your local transcript. You keep your conversation, your context, everything. The agent comes back clean.
+
+---
+
+## LSP — Your IDE's Brain, Inside the Agent
+
+This is one of the things that separates omp from every other terminal agent I've used.
+
+Most agents do file operations. They read files, write files, grep things. That's good but it's blunt. When your IDE renames a function, it doesn't just change the text in one file — it understands the code structure. It updates imports, re-exports, barrel files, aliased references. It knows what the rename *means*.
+
+omp wires LSP (Language Server Protocol) directly into the agent. The same intelligence your IDE uses is available in every write, rename, and navigation operation.
+
+### What this actually looks like
+
+```bash
+# Rename a symbol — updates every reference across the project
+> rename the function `processPayload` to `handleIncomingData`
+
+# Find all usages of a type
+> lsp find-references PaymentGateway
+
+# Get diagnostics for the current file
+> lsp diagnostics src/auth/session.ts
+
+# Jump to definition (agent-style — it reads and summarizes)
+> lsp go-to-definition UserService
+
+# Code actions on a specific range
+> lsp code-action src/api/routes.ts:45
+```
+
+When you ask for a rename and LSP is active, it goes through `workspace/willRenameFiles` first. Re-exports update. Barrel files update. Aliased imports update. Before the file moves, everything is consistent.
+
+You're not just editing text anymore. The agent knows the structure of your code the way your IDE does. **14 LSP operations**, all available.
+
+### Configuring LSP
+
+```json
+{
+  "lsp": {
+    "servers": [
+      { "language": "typescript", "command": "typescript-language-server", "args": ["--stdio"] },
+      { "language": "python", "command": "pylsp" },
+      { "language": "rust", "command": "rust-analyzer" }
+    ]
+  }
+}
+```
+
+---
+
+## DAP — A Real Debugger, Not Print Statements
+
+Most developers debug with print statements. Even with great IDEs, the debugger feels like too much setup for a quick investigation.
+
+omp changed this for me because the *agent* drives the debugger. You describe the problem in plain English. The agent attaches the right debugger, sets breakpoints, steps through execution, reads variables, and explains what it finds. **28 DAP operations.** All usable through natural language.
+
+```bash
+# Attach to a running Go service and inspect goroutines
+> attach to the hanging Go process and walk its goroutines
+
+# Debug a C binary that's segfaulting
+> attach lldb to /tmp/demo and find the bad pointer
+
+# Python process investigation
+> attach debugpy to process 4821, pause it, and check what's in the request queue
+
+# Set a breakpoint and step through
+> set a breakpoint at src/payments/charge.py:87 and step through the next 5 lines
+```
+
+A segfault that used to mean "add prints, rebuild, run, repeat" now means "hey omp, go find it."
+
+---
+
+## Hashline Edits — The Token Efficiency Secret
+
+Here's something most people don't know: a huge portion of AI coding costs come from the model re-typing code it's already seen. Old-style approaches either generate the entire file again or produce fragile "replace this line" patterns that break on whitespace.
+
+Hashline edits fix this. Instead of retyping surrounding code, the model points at anchors (content hashes) and specifies only what changes. The result is up to **61% fewer output tokens** on the same work.
+
+```
+# Hashline patch format — the model says "find this anchor, replace with this"
+@@abc123 processUser(data)
+-  const result = await db.query(data)
++  const result = await db.queryWithRetry(data, { maxAttempts: 3 })
+@@def456
+```
+
+If the anchor is stale (file changed since the patch was generated), omp rejects the patch before it corrupts anything. No silent wrong edits. The patch either lands cleanly or it doesn't land.
+
+You don't configure this — it's just how the `edit` tool works. But knowing it exists helps you understand why omp is faster and cheaper on large files than alternatives.
+
+---
+
+## Agent Roles — Ten Models, One Tool
+
+omp routes work to different models based on *intent*, not just task. You configure which model handles which role, and omp automatically picks the right one.
+
+| Role | What it's for |
+|---|---|
+| `default` | Normal turns — your primary model |
+| `smol` | Cheap fan-out — fast subagent work, summaries |
+| `slow` | Deep reasoning — complex architecture decisions |
+| `plan` | Planning mode — thinking before implementing |
+| `commit` | Changelogs and commit messages |
+| `advisor` | Silent reviewer — watches every turn |
+| `vision` | Image and screenshot analysis |
+| `designer` | UI and visual work |
+| `task` | Subagent orchestration |
+| `tiny` | Smallest/cheapest — classification, tagging |
+
+### Configuring roles
+
+```yaml
+# ~/.omp/agent/config.yml
+modelRoles:
+  default: anthropic/claude-sonnet-4-5
+  slow: anthropic/claude-opus-4
+  smol: google/gemini-flash-2.0
+  plan: anthropic/claude-sonnet-4-5
+  advisor: openai/gpt-4.1-mini
+  commit: google/gemini-flash-2.0
+  tiny: google/gemini-flash-2.0-8b
+```
+
+### Switching models mid-session
+
+```bash
+/model          # open the model picker
+# Ctrl+P        # cycle through configured models for the active role
+
+omp --slow      # activates the slow/reasoning model
+omp --plan      # activates plan mode
+omp --smol      # activates the cheap/fast model
+```
+
+---
+
+## Subagents — The Part That Actually Scales Your Work
+
+You are the orchestrator. The agent is your senior engineer. Subagents are the team.
+
+```bash
+# Fan out two agents in parallel
+> orchestrate: analyze the auth module and the payments module simultaneously,
+  then give me a combined dependency report
+
+# The task tool under the hood — isolated worktrees, typed returns
+> task: check for unused exports in /src/components and /src/api separately,
+  then merge findings
+```
+
+While subagents are running, press `Alt+A` to open the Agent Hub. You see:
+
+- Every subagent's current activity and status
+- Per-agent token usage and cost
+- Live transcripts — you can read what each agent is actually doing
+- Ability to send steering messages to a running agent
+- Revive a parked agent or kill a stuck one without aborting the parent
+
+```bash
+# Pull a specific field out of a subagent's output
+read agent://<subagent-id>/findings.0.path
+
+# Read a subagent's transcript
+read agent://<subagent-id>/transcript
+```
+
+---
+
+## Advisor Mode — A Second Brain Watching Every Turn
+
+You pair a second model to the `advisor` role. It reads every single turn the main agent takes — every tool call, every response, every file edit — and injects notes inline. It doesn't take over. It just watches and comments.
+
+```bash
+/advisor status                           # check advisor state
+/advisor enable --model openai/gpt-4.1-mini  # pair an advisor
+/advisor disable                          # turn it off
+```
+
+The advisor's notes show up as amber cards in the TUI. If it's a concern, you see a concern. If it's a hard blocker, it flags it and the main agent sees the flag and either course-corrects or explains why it won't.
+
+The advisor runs on its own context and its own model. It doesn't eat into the main agent's context window. And it catches real issues — missed edge cases, acceptance criteria the main agent quietly rewrote to fit its solution instead of adjusting the solution.
+
+---
+
+## Vibe Mode — When You Want to Direct, Not Do
+
+In Vibe mode, *you are the director* and the agent spins up `fast` and `good` worker sessions and coordinates between them. The orchestrating agent has a read-only toolset — it can plan and coordinate but it can't touch files directly. The workers do the actual implementation.
+
+```bash
+/vibe
+
+# Now you direct — the agent coordinates fast/good workers
+> the goal is to refactor the entire logging layer to use structured JSON
+```
+
+When to use it: large refactors, features that span multiple modules, anything where you'd naturally break work into tracks and assign them to different people.
+
+---
+
+## Memory Management — Stop Using the Default
+
+omp has built-in memory tools: `retain`, `recall`, `reflect`, `memory_edit`. They work. But for anything serious — a real project with evolving architecture, long-running context — the default local SQLite backend starts to show limits.
+
+Instead of flat KV memory, use **[Graphify](https://graphify.com/)** — a graph-native memory backend that understands relationships between things, not just individual facts. When the agent recalls something about `UserService`, Graphify surfaces connected knowledge: related modules, past decisions, constraints. The recall is richer and the relevance is better.
+
+```yaml
+# ~/.omp/agent/config.yml
+memory:
+  backend: graphify
+```
+
+---
+
+## Prompt Controls — Three Magic Words
+
+There are three lowercase words that change agent behavior when typed in prose (not in code blocks):
+
+| Word | What happens |
+|---|---|
+| `ultrathink` | Requests maximum reasoning depth — use for architectural decisions, complex debugging, anything where you genuinely need the model to slow down and think hard. |
+| `orchestrate` | Runs the work through parallel subagents and verifies each phase. Use when the task naturally decomposes into independent pieces. |
+| `workflowz` | Builds a deterministic multi-subagent workflow. Use when you need reproducible multi-step processes, not ad-hoc coordination. |
+
+```
+> ultrathink: what's the right approach for handling distributed transaction failures?
+
+> orchestrate: audit every API endpoint for missing input validation
+
+> workflowz: build a release pipeline that runs tests, updates the changelog, bumps the version
+```
+
+---
+
+## The Slash Command Reference — All of It
+
+This is the section that most guides skip, and it's the part I wish I'd had from day one. omp has a deep command palette and the useful ones are buried. I've grouped them by what you're actually trying to do.
+
+---
+
+### 🔄 Session & Context Control
+
+These are the commands you'll reach for constantly — the ones that shape how the session behaves, not just what it does.
+
+| Command | What it does |
+|---|---|
+| `/fresh` | Resets the provider stream (stale cache, wedged connection) **without** losing your transcript. The single most underused session command. |
+| `/model` | Opens the model picker mid-session. Swap the active model without restarting. |
+| `/vibe` | Enters Vibe mode — you direct, workers execute. See above. |
+| `/plan` | Activates plan mode. The agent proposes an approach and waits for your green light before touching any files. |
+| `/rename <name>` | Renames the current session. Useful when you started unnamed and want to track it. |
+| `/new` | Starts a fresh session inside the same TUI instance. |
+| `/settings` | Opens the interactive settings panel. Live editing without touching YAML. |
+
+---
+
+### 🧹 Context & Memory Cleanup
+
+One of the most underappreciated problems with long sessions is context bloat. These commands exist specifically to deal with it — and they're very different from each other.
+
+| Command | What it does |
+|---|---|
+| `/compact` | Compresses the conversation context in place. Trims tokens, keeps a recent tail. Use when the session is getting long and sluggish. |
+| `/compact soft` | A lighter compaction — less aggressive trimming, more recent tail preserved. |
+| `/compact remote` | Delegates compaction to the remote service (faster, uses provider-native context management). |
+| `/compact snapcompact` | Bitmap-frame context compression — rasterizes older turns into a dense snapshot. Heaviest but most thorough. |
+| `/handoff` | A semantic context handoff — the agent writes a structured summary of what it knows and what's happening, then continues with that as the new context. Different from `/compact`: use `/handoff` when you're switching work phases or returning after a long break and you want the agent's mental model preserved precisely. Use `/compact` when you just need the token count down. |
+| `/shake` | Strips **thinking blocks** (model reasoning traces) from session history. Context drops without losing the actual work. Underrated when you've done heavy reasoning-heavy work and the thinking blocks are eating your window. |
+| `/cleanse` | Removes tool call artifacts and intermediate outputs from the conversation that aren't needed anymore. Clean up the noise without affecting the working context. |
+| `/context` | Shows you the current context usage — tokens consumed, tokens remaining, what's taking up space. Run this before deciding which cleanup strategy to use. |
+
+> **The mental model:** `/context` tells you how bad it is. `/shake` removes thinking bloat. `/compact` trims the conversation. `/handoff` creates a semantic checkpoint. Use them in that order, escalating as needed.
+
+---
+
+### ✅ Task & Work Management
+
+| Command | What it does |
+|---|---|
+| `/todo` | Opens the session todo list. The agent writes to this automatically when tracking multi-step work. |
+| `/todo add <item>` | Manually add a task to the list. |
+| `/todo expand` | Expands collapsed todo items to show full detail. |
+| `/todo collapse` | Collapses todo items for a cleaner view. |
+| `/jobs` | Lists all background jobs — long-running processes, subagent tasks, anything running in the background. |
+| `/jobs cancel <id>` | Cancels a specific background job by ID. |
+| `/review` | Spawns dedicated reviewer subagents that sweep branches, commits, or uncommitted work in parallel. Issues come back ranked P0–P3 with confidence scores. |
+| `/git` | Opens the fullscreen interactive git TUI — diff viewer, staging sidebar, commit composer with amend support. Full mouse and keyboard nav. One of the most recent additions and seriously good. |
+
+---
+
+### 🤝 Collaboration & Sharing
+
+| Command | What it does |
+|---|---|
+| `/collab` | Starts a collaborative session. Generates a link (and QR code) that teammates can open in another terminal with `omp join`, or in a browser. Frames are sealed client-side — the relay never sees your keys. |
+| `/collab view` | Read-only link. Anyone can watch the session but can't prompt the agent. |
+| `/collab stop` | Ends the collaboration session and invalidates the link. |
+
+---
+
+### 🧠 Intelligence & Analysis
+
+| Command | What it does |
+|---|---|
+| `/advisor` | Shows advisor status, enables or disables the advisor model, or configures it. |
+| `/advisor on` | Enables the advisor for this session. |
+| `/advisor off` | Disables it. |
+| `/extensions` | Opens the Extension Control Center — fullscreen dashboard showing all loaded extensions, MCP connections, tools, skills, hooks. Manage everything in one place with live connection status. |
+| `/vision` | Toggles the image inspection tool for this session. Overrides the `inspect_image.mode` setting per-session. |
+| `/computer` | Toggles the computer-use tool for this session — window-aware desktop control. Per-session override without touching settings. |
+| `/debug` | Opens the debug panel — profiling, diagnostics, reporting tools. Useful when something is behaving unexpectedly. |
+
+---
+
+### 📦 Config & Environment
+
+| Command | What it does |
+|---|---|
+| `/settings` | Interactive settings panel — everything from `omp config list`, but navigable and editable live. Changes persist to `~/.omp/agent/config.yml`. |
+| `/reload` | Reloads extensions and plugins without restarting the session. When you've modified a tool or skill, this picks up the changes. |
+
+---
+
+### 🔀 Portability & Handoffs
+
+| Command | What it does |
+|---|---|
+| `/handoff` | (see Context section above — also worth thinking of as a portability tool.) The structured summary it produces can be loaded in a new session to resume exactly where you left off, even with a different model or machine. |
+
+---
+
+## Config Is Just a Path
+
+Your omp config isn't locked to one machine or one format. It's a path. You can:
+
+```bash
+# Export your current live config
+omp config export --output ~/.omp/my-config.json
+
+# Export full session data for replay
+omp config export data --config my-config.json --output session-data.json
+
+# Apply saved config on any machine
+omp config dsc set --state $(cat my-config.json)
+
+# List all settings with current effective values
+omp config list
+
+# Get a specific setting
+omp config get theme.dark
+
+# Change a setting
+omp config set compaction.enabled false
+
+# Reset a setting to its default
+omp config reset steeringMode
+
+# Print the active agent directory
+omp config path
+```
+
+Commit your config to a dotfiles repo. Check it out on a new machine. Your entire agent setup — roles, providers, LSP servers, memory backend — is portable.
+
+---
+
+## Shell Completions (Set Once, Use Forever)
+
+```bash
+# zsh
+eval "$(omp completions zsh)"
+
+# bash
+eval "$(omp completions bash)"
+
+# fish
+omp completions fish > ~/.config/fish/completions/omp.fish
+```
+
+omp generates completions from live command and flag metadata, so they never drift from the actual CLI. Model names, session IDs, everything — tab-completable.
+
+---
+
+## The Fastest Reference You'll Keep Coming Back To
+
+I've tried a lot of organizational patterns for this. The one that stuck for me is grouping by *moment* — what am I trying to do right now?
+
+```
+# JUST STARTING
+omp --session <name>           start named session
+omp --resume <name>            pick up where I left off
+omp --slow                     thinking-heavy session
+omp --plan                     plan before touching files
+
+# SOMETHING WENT WRONG
+/fresh                         stream wedged, reset without losing context
+/debug                         something behaving weird, open diagnostics
+
+# SESSION GETTING BLOATED
+/context                       how bad is it?
+/shake                         lots of reasoning blocks? strip them
+/compact                       trim the conversation
+/compact soft                  lighter trim
+/handoff                       switching phases, preserve mental model
+
+# PARALLEL WORK
+Alt+A                          Agent Hub — watch all running agents
+/jobs                          what's running in the background?
+/jobs cancel <id>              kill a specific job
+
+# COLLABORATION
+/collab                        share the session (read-write)
+/collab view                   share read-only
+/collab stop                   end sharing
+
+# TRACKING WORK
+/todo                          see the task list
+/todo add <item>               add something manually
+/review                        spawn parallel code reviewers (P0-P3)
+/git                           fullscreen git TUI
+
+# SETTINGS & CONFIG
+/settings                      live settings panel
+/model                         switch model mid-session
+/rename <name>                 name this session
+/extensions                    manage tools, MCP, skills
+
+# INTELLIGENCE
+/advisor on                    pair a reviewer model
+/advisor off                   turn it off
+/vision                        toggle image inspection for this session
+```
+
+---
+
+## Where This Actually Goes
+
+I've been building with omp for a while now, and the shift isn't just in productivity — it's in how I think about problems. When you have LSP-aware refactoring, real debugger access, parallel subagents, an advisor watching for mistakes, and a slash command for every workflow state, you stop thinking about what the agent *can't* do and start thinking about what you want to accomplish.
+
+The terminal doesn't feel like a step down from an IDE anymore. In a lot of ways it's ahead.
+
+Try one thing from this guide today. Not all of it — just one. The `/handoff` vs `/compact` distinction, or the advisor, or `/git`. See how it fits into how you actually work. Then come back for the rest.
+
+---
+
+Further reading: [GitHub](https://github.com/can1357/oh-my-pi) · [omp.sh](https://omp.sh) Both are worth bookmarking

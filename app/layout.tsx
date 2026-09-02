@@ -16,7 +16,7 @@ const vercettiFont = localFont({
 export const metadata: Metadata = {
   title: "Sohan Guptha ✌️",
   description: "A Software Engineer by profession, a creative at heart.",
-  keywords: "Sohan Guptha, Software Engineer, React Developer, Three.js, Creative Developer, Web Development, Angular, JavaScript, TypeScript, Portfolio",
+  keywords: "Sohan Guptha, Software Engineer, React Developer, Nodejs, Spring, Creative Developer, Web Development, JavaScript, TypeScript, Portfolio",
   authors: [{ name: "Sohan Guptha" }],
   creator: "Sohan Guptha",
   publisher: "Sohan Guptha",
