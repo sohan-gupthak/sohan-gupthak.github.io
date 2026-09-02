@@ -2,10 +2,11 @@ import type { MetadataRoute } from "next";
 
 import { getPublishedPostMetas } from "@/lib/blog/posts";
 
+export const dynamic = "force-static";
+export const revalidate = false;
 const SITE_URL_FALLBACK = "https://sohan-gupthak.github.io";
 const getSiteUrl = (): string =>
   process.env.NEXT_PUBLIC_SITE_URL?.trim() || SITE_URL_FALLBACK;
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl().replace(/\/$/, "");
   const posts = await getPublishedPostMetas();
