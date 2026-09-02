@@ -29,6 +29,6 @@ export const FOOTER_LINKS: FooterLink[] = [
     name: 'Resume',
     hoverText: 'Download',
     icon: 'icons/file.svg',
-    url: './resume_sohan_kukkadapu (3).pdf',
+    url: './Resume_latest.pdf',
   }
 ];
