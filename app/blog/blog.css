@@ -55,7 +55,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 16px;
-  padding: 28px 24px 18px;
+  padding: 28px clamp(20px, 5vw, 40px) 18px;
   border-bottom: 1px solid var(--color-rule);
   max-width: 880px;
   margin: 0 auto;
@@ -433,16 +433,17 @@
 
 @media (max-width: 640px) {
   .blog-header {
-    padding: 20px 0 14px;
+    padding-top: 20px;
+    padding-bottom: 14px;
   }
-  .blog-index {
-    padding: 48px 0 80px;
-  }
+  .blog-index,
   .blog-article {
-    padding: 40px 0 80px;
+    padding-left: clamp(20px, 5vw, 40px);
+    padding-right: clamp(20px, 5vw, 40px);
   }
   .blog-card {
-    padding: 20px 0;
+    padding-top: 20px;
+    padding-bottom: 20px;
   }
 }
 

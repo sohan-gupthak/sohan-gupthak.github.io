@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M4 4h12a2 2 0 0 1 2 2v14H6a2 2 0 0 1-2-2V4Z"/>
-  <path d="M4 18a2 2 0 0 1 2-2h12"/>
-  <line x1="8" y1="8" x2="13" y2="8"/>
-  <line x1="8" y1="12" x2="13" y2="12"/>
-  <line x1="8" y1="16" x2="11" y2="16"/>
+<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0,0,256,256">
+  <g fill="#ffffff" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal">
+    <g transform="scale(8.53333,8.53333)">
+      <path d="M27.243,3.243l-1.414,-1.414c-0.391,-0.391 -1.024,-0.391 -1.414,0l-3.122,3.121l-12.122,12.122c-0.781,0.781 -0.781,2.047 0,2.828l1.414,1.414l-5.879,5.879c-0.391,0.391 -0.391,1.024 0,1.414l0,0c0.391,0.391 1.024,0.391 1.414,0l5.879,-5.879l1.414,1.414c0.781,0.781 2.047,0.781 2.828,0l15.243,-15.243c0.391,-0.391 0.391,-1.024 0,-1.414l-0.121,-0.121l-2.829,2.829l-1.414,-1.414l2.829,-2.829l-0.708,-0.707l-2.829,2.828l-1.414,-1.414l2.829,-2.828l-0.001,-0.001zM12,21.657l-1.414,-1.414l9.657,-9.657l1.414,1.414z"></path>
+      <path d="M4,4h12c0.552,0 1,0.448 1,1v1h2v-1c0,-1.657 -1.343,-3 -3,-3h-12c-1.657,0 -3,1.343 -3,3v20c0,1.657 1.343,3 3,3h16c1.657,0 3,-1.343 3,-3v-12h-2v12c0,0.552 -0.448,1 -1,1h-16c-0.552,0 -1,-0.448 -1,-1v-20c0,-0.552 0.448,-1 1,-1z"></path>
+    </g>
+  </g>
 </svg>

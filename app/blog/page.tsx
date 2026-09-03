@@ -44,6 +44,7 @@ export default async function BlogIndexPage() {
                   <p className="blog-card__meta">
                     <time dateTime={post.date}>{formatDate(post.date)}</time>
                     {post.author ? <span>· {post.author}</span> : null}
+                    {post.readTime ? <span>· {post.readTime}</span> : null}
                   </p>
                   <h2 className="blog-card__title">{post.title}</h2>
                   {post.description ? (

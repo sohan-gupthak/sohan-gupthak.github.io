@@ -90,6 +90,7 @@ export default async function BlogArticlePage({
           <p className="blog-article__meta">
             <time dateTime={post.date}>{formatDate(post.date)}</time>
             {post.author ? <span>· {post.author}</span> : null}
+            {post.readTime ? <span>· {post.readTime}</span> : null}
             {post.updated && post.updated !== post.date ? (
               <span>
                 · updated <time dateTime={post.updated}>{formatDate(post.updated)}</time>
@@ -101,11 +102,10 @@ export default async function BlogArticlePage({
           {renderMarkdoc(post.content)}
         </article>
         <script
+          type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
-
         />
         <footer className="blog-footer">
-          <span>{post.slug}</span>
           <a href="/blog/rss.xml">Subscribe via RSS</a>
         </footer>
       </div>

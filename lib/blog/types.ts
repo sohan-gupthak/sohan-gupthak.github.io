@@ -8,6 +8,7 @@ export type BlogFrontmatter = {
   image?: string;
   draft?: boolean;
   slug?: string;
+  readTime?: string;
 };
 
 export type BlogPost = {
@@ -20,6 +21,7 @@ export type BlogPost = {
   tags?: string[];
   image?: string;
   draft?: boolean;
+  readTime?: string;
   content: string;
   filePath: string;
 };

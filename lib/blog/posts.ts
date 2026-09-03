@@ -78,6 +78,7 @@ const readAllPosts = async (): Promise<BlogPost[]> => {
       image: typeof data.image === "string" ? data.image : undefined,
       draft: data.draft === true,
       content: parsed.content,
+      readTime: typeof data.readTime === "string" ? data.readTime : undefined,
       filePath: fullPath,
     });
   }
@@ -102,6 +103,7 @@ const toMeta = (post: BlogPost): BlogPostMeta => ({
   tags: post.tags,
   image: post.image,
   draft: post.draft,
+  readTime: post.readTime,
 });
 
 
