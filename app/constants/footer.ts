@@ -14,10 +14,10 @@ export const FOOTER_LINKS: FooterLink[] = [
     url: 'https://github.com/sohan-gupthak',
   },
   {
-    name: 'Spotify',
-    hoverText: 'Curated playlists',
-    icon: 'icons/spotify.svg',
-    url: '#',
+    name: 'Skills',
+    hoverText: 'Agent skills',
+    icon: 'icons/skills.svg',
+    url: 'https://www.skills.sh/sohan-gupthak/skills',
   },
   {
     name: 'Blog',
